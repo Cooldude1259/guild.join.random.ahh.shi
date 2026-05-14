@@ -2,183 +2,138 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cosmic Flow Background</title>
+    <title>Cosmic Fluid Background</title>
     <style>
-        :root {
-            --space-deep: #020617;
-            --nebula-purple: rgba(76, 29, 149, 0.4);
-            --nebula-blue: rgba(30, 58, 138, 0.4);
-            --nebula-pink: rgba(131, 24, 67, 0.3);
-        }
-
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: var(--space-deep);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* Fluid Nebula Background */
-        .nebula-container {
-            position: fixed;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
-            z-index: -2;
-            filter: blur(80px);
-            animation: nebulaRotate 60s linear infinite;
-        }
-
-        .nebula {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 30% 40%, var(--nebula-purple) 0%, transparent 50%),
-                radial-gradient(circle at 70% 60%, var(--nebula-blue) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, var(--nebula-pink) 0%, transparent 60%);
-        }
-
-        @keyframes nebulaRotate {
-            from { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.2); }
-            to { transform: rotate(360deg) scale(1); }
+            background-color: #02040a; /* Fallback deep black */
+            font-family: 'Segoe UI', sans-serif;
         }
 
         canvas {
             display: block;
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            z-index: -1;
         }
 
-        #glass-ui {
+        #ui {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 50px;
+            left: 50px;
             color: white;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            padding: 40px 80px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 15px rgba(0,0,0,0.5);
             pointer-events: none;
         }
 
-        #time {
-            font-size: 5rem;
-            font-weight: 100;
-            margin: 0;
-            letter-spacing: 10px;
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
-        }
-
-        #date {
-            font-size: 1.2rem;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            opacity: 0.7;
-        }
+        #time { font-size: 4rem; font-weight: 200; margin: 0; }
+        #date { font-size: 1.2rem; opacity: 0.6; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <div class="nebula-container">
-        <div class="nebula"></div>
-    </div>
-    
-    <canvas id="starfield"></canvas>
+    <canvas id="canvas"></canvas>
 
-    <div id="glass-ui">
-        <p id="date">Loading Celestial Data</p>
-        <h1 id="time">00:00:00</h1>
+    <div id="ui">
+        <h1 id="time">00:00</h1>
+        <div id="date">CALIBRATING...</div>
     </div>
 
     <script>
-        const canvas = document.getElementById('starfield');
+        const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const timeEl = document.getElementById('time');
         const dateEl = document.getElementById('date');
 
-        let stars = [];
-        const starCount = 400;
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
-
-        class Star {
-            constructor() {
-                this.reset();
-            }
-
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 1.5;
-                this.speed = Math.random() * 0.05 + 0.02; // Slow drifting
-                this.brightness = Math.random();
-                this.blinkSpeed = Math.random() * 0.02;
-            }
-
-            update() {
-                this.y -= this.speed; // Drift upwards
-                if (this.y < 0) this.y = canvas.height;
-                
-                // Twinkle effect
-                this.brightness += this.blinkSpeed;
-                if (this.brightness > 1 || this.brightness < 0.2) {
-                    this.blinkSpeed = -this.blinkSpeed;
-                }
-            }
-
-            draw() {
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.brightness})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+        let width, height, stars = [];
+        let tick = 0;
 
         function init() {
-            for (let i = 0; i < starCount; i++) {
-                stars.push(new Star());
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            stars = [];
+            for(let i=0; i<200; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2,
+                    speed: Math.random() * 0.2 + 0.1
+                });
             }
         }
 
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            stars.forEach(star => {
-                star.update();
-                star.draw();
+        function drawNebula() {
+            tick += 0.002;
+            
+            // Create a moving fluid gradient
+            const grad = ctx.createRadialGradient(
+                width/2 + Math.sin(tick) * (width/3), 
+                height/2 + Math.cos(tick) * (height/3), 
+                0, 
+                width/2, height/2, width
+            );
+            
+            // Space Colors
+            grad.addColorStop(0, '#1e1b4b'); // Deep Indigo
+            grad.addColorStop(0.4, '#312e81'); // Dark Blue
+            grad.addColorStop(0.7, '#020617'); // Black
+            grad.addColorStop(1, '#000000');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Add a secondary "gas" layer
+            ctx.globalCompositeOperation = 'screen';
+            const grad2 = ctx.createRadialGradient(
+                width/2 + Math.cos(tick*0.5) * (width/2), 
+                height/2 + Math.sin(tick*0.7) * (height/2), 
+                0, 
+                width/2, height/2, width/1.5
+            );
+            grad2.addColorStop(0, 'rgba(76, 29, 149, 0.2)'); // Purple haze
+            grad2.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad2;
+            ctx.fillRect(0, 0, width, height);
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        function drawStars() {
+            ctx.fillStyle = "white";
+            stars.forEach(s => {
+                ctx.globalAlpha = Math.random() * 0.5 + 0.5;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                ctx.fill();
+                
+                s.y -= s.speed;
+                if(s.y < 0) s.y = height;
             });
-            requestAnimationFrame(animate);
+            ctx.globalAlpha = 1;
+        }
+
+        function loop() {
+            drawNebula();
+            drawStars();
+            updateClock();
+            requestAnimationFrame(loop);
         }
 
         function updateClock() {
             const now = new Date();
-            timeEl.innerText = now.toLocaleTimeString([], { hour12: false });
-            dateEl.innerText = now.toLocaleDateString(undefined, { 
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-            });
+            timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            dateEl.innerText = now.toLocaleDateString(undefined, {month: 'long', day: 'numeric'}).toUpperCase();
         }
 
-        setInterval(updateClock, 1000);
-        updateClock();
+        window.addEventListener('resize', init);
         init();
-        animate();
+        loop();
     </script>
 </body>
 </html>
