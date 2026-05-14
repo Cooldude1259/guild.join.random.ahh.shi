@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cosmic Fluid Background</title>
+    <title>Interactive Nebula</title>
     <style>
         body, html {
             margin: 0;
@@ -10,8 +10,8 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #02040a; /* Fallback deep black */
-            font-family: 'Segoe UI', sans-serif;
+            background-color: #050505;
+            font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
         }
 
         canvas {
@@ -19,19 +19,37 @@
             position: fixed;
             top: 0;
             left: 0;
+            /* This ensures the wallpaper draws behind everything */
+            z-index: -1; 
         }
 
         #ui {
             position: absolute;
-            bottom: 50px;
-            left: 50px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             color: white;
-            text-shadow: 0 0 15px rgba(0,0,0,0.5);
+            text-align: center;
             pointer-events: none;
+            user-select: none;
         }
 
-        #time { font-size: 4rem; font-weight: 200; margin: 0; }
-        #date { font-size: 1.2rem; opacity: 0.6; letter-spacing: 2px; }
+        #time { 
+            font-size: clamp(5rem, 15vw, 10rem); 
+            font-weight: 200; 
+            margin: 0; 
+            letter-spacing: -2px;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+        }
+        
+        #date { 
+            font-size: 1.2rem; 
+            font-weight: 400;
+            opacity: 0.5; 
+            letter-spacing: 8px; 
+            text-transform: uppercase;
+            margin-top: -10px;
+        }
     </style>
 </head>
 <body>
@@ -40,7 +58,7 @@
 
     <div id="ui">
         <h1 id="time">00:00</h1>
-        <div id="date">CALIBRATING...</div>
+        <div id="date">COSMIC LINK ACTIVE</div>
     </div>
 
     <script>
@@ -50,6 +68,7 @@
         const dateEl = document.getElementById('date');
 
         let width, height, stars = [];
+        let mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
         let tick = 0;
 
         function init() {
@@ -59,81 +78,94 @@
             canvas.height = height;
             
             stars = [];
-            for(let i=0; i<200; i++) {
+            for(let i=0; i<250; i++) {
                 stars.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    size: Math.random() * 2,
-                    speed: Math.random() * 0.2 + 0.1
+                    z: Math.random() * width, // Depth
+                    size: Math.random() * 1.5 + 0.5,
+                    color: Math.random() > 0.8 ? '#93c5fd' : '#ffffff'
                 });
             }
         }
 
-        function drawNebula() {
-            tick += 0.002;
+        // Mouse Tracking
+        window.addEventListener('mousemove', (e) => {
+            mouse.targetX = (e.clientX - width / 2) / 25;
+            mouse.targetY = (e.clientY - height / 2) / 25;
+        });
+
+        function draw() {
+            tick += 0.001;
             
-            // Create a moving fluid gradient
+            // Smooth mouse easing
+            mouse.x += (mouse.targetX - mouse.x) * 0.05;
+            mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+            // 1. Draw Moving Deep Space Nebula
             const grad = ctx.createRadialGradient(
-                width/2 + Math.sin(tick) * (width/3), 
-                height/2 + Math.cos(tick) * (height/3), 
-                0, 
+                width/2 + (mouse.x * 2), height/2 + (mouse.y * 2), 0,
                 width/2, height/2, width
             );
-            
-            // Space Colors
-            grad.addColorStop(0, '#1e1b4b'); // Deep Indigo
-            grad.addColorStop(0.4, '#312e81'); // Dark Blue
-            grad.addColorStop(0.7, '#020617'); // Black
+            grad.addColorStop(0, '#0f172a'); // Midnight
+            grad.addColorStop(0.3, '#1e1b4b'); // Deep Indigo
+            grad.addColorStop(0.6, '#020617'); // Black hole center
             grad.addColorStop(1, '#000000');
-
+            
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, width, height);
 
-            // Add a secondary "gas" layer
+            // 2. Interactive Gas Clouds (Fluid Effect)
             ctx.globalCompositeOperation = 'screen';
-            const grad2 = ctx.createRadialGradient(
-                width/2 + Math.cos(tick*0.5) * (width/2), 
-                height/2 + Math.sin(tick*0.7) * (height/2), 
-                0, 
-                width/2, height/2, width/1.5
-            );
-            grad2.addColorStop(0, 'rgba(76, 29, 149, 0.2)'); // Purple haze
-            grad2.addColorStop(1, 'transparent');
-            ctx.fillStyle = grad2;
+            const gasX = width/2 + Math.sin(tick) * 200 + (mouse.x * 5);
+            const gasY = height/2 + Math.cos(tick) * 150 + (mouse.y * 5);
+            
+            const gasGrad = ctx.createRadialGradient(gasX, gasY, 0, gasX, gasY, width/1.2);
+            gasGrad.addColorStop(0, 'rgba(67, 56, 202, 0.15)'); // Blue Gas
+            gasGrad.addColorStop(0.5, 'rgba(124, 58, 237, 0.1)'); // Purple Gas
+            gasGrad.addColorStop(1, 'transparent');
+            
+            ctx.fillStyle = gasGrad;
             ctx.fillRect(0, 0, width, height);
             ctx.globalCompositeOperation = 'source-over';
-        }
 
-        function drawStars() {
-            ctx.fillStyle = "white";
+            // 3. 3D Starfield with Parallax
             stars.forEach(s => {
-                ctx.globalAlpha = Math.random() * 0.5 + 0.5;
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
-                ctx.fill();
-                
-                s.y -= s.speed;
-                if(s.y < 0) s.y = height;
-            });
-            ctx.globalAlpha = 1;
-        }
+                // Perspective calculation
+                const perspective = 400 / (400 + s.z);
+                const x = (s.x - width/2 + mouse.x * (s.z/100)) * perspective + width/2;
+                const y = (s.y - height/2 + mouse.y * (s.z/100)) * perspective + height/2;
+                const size = s.size * perspective;
 
-        function loop() {
-            drawNebula();
-            drawStars();
+                ctx.fillStyle = s.color;
+                ctx.globalAlpha = 0.2 + (perspective); 
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI*2);
+                ctx.fill();
+
+                // Move stars toward camera
+                s.z -= 0.5; 
+                if(s.z < -400) {
+                    s.z = width;
+                    s.x = Math.random() * width;
+                    s.y = Math.random() * height;
+                }
+            });
+
             updateClock();
-            requestAnimationFrame(loop);
+            requestAnimationFrame(draw);
         }
 
         function updateClock() {
             const now = new Date();
-            timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            dateEl.innerText = now.toLocaleDateString(undefined, {month: 'long', day: 'numeric'}).toUpperCase();
+            timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            dateEl.innerText = now.toLocaleDateString(undefined, options).toUpperCase();
         }
 
         window.addEventListener('resize', init);
         init();
-        loop();
+        draw();
     </script>
 </body>
 </html>
