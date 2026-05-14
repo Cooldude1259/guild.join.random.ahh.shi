@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Interactive Nebula</title>
+    <title>Supernova Interactive</title>
     <style>
         body, html {
             margin: 0;
@@ -10,162 +10,121 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #050505;
-            font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
+            background-color: #020205; /* Deep space black */
         }
-
         canvas {
             display: block;
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
-            /* This ensures the wallpaper draws behind everything */
-            z-index: -1; 
         }
-
         #ui {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
+            color: #ffffff;
             text-align: center;
+            font-family: 'Segoe UI', sans-serif;
             pointer-events: none;
             user-select: none;
         }
-
         #time { 
-            font-size: clamp(5rem, 15vw, 10rem); 
-            font-weight: 200; 
+            font-size: 8vw; 
+            font-weight: 100; 
             margin: 0; 
-            letter-spacing: -2px;
-            filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
-        }
-        
-        #date { 
-            font-size: 1.2rem; 
-            font-weight: 400;
-            opacity: 0.5; 
-            letter-spacing: 8px; 
-            text-transform: uppercase;
-            margin-top: -10px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas"></canvas>
+    <canvas id="c"></canvas>
 
     <div id="ui">
         <h1 id="time">00:00</h1>
-        <div id="date">COSMIC LINK ACTIVE</div>
     </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('c');
         const ctx = canvas.getContext('2d');
         const timeEl = document.getElementById('time');
-        const dateEl = document.getElementById('date');
 
-        let width, height, stars = [];
-        let mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
-        let tick = 0;
+        let particles = [];
+        let mouse = { x: -1000, y: -1000 };
 
         function init() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-            
-            stars = [];
-            for(let i=0; i<250; i++) {
-                stars.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    z: Math.random() * width, // Depth
-                    size: Math.random() * 1.5 + 0.5,
-                    color: Math.random() > 0.8 ? '#93c5fd' : '#ffffff'
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<150; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2 + 1,
+                    // Space colors: Blue, Purple, White
+                    color: ['#4f46e5', '#7c3aed', '#ffffff', '#2563eb'][Math.floor(Math.random() * 4)]
                 });
             }
         }
 
-        // Mouse Tracking
         window.addEventListener('mousemove', (e) => {
-            mouse.targetX = (e.clientX - width / 2) / 25;
-            mouse.targetY = (e.clientY - height / 2) / 25;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
         });
 
-        function draw() {
-            tick += 0.001;
-            
-            // Smooth mouse easing
-            mouse.x += (mouse.targetX - mouse.x) * 0.05;
-            mouse.y += (mouse.targetY - mouse.y) * 0.05;
+        function animate() {
+            // Background with "Trail" effect for fluid look
+            ctx.fillStyle = 'rgba(2, 2, 5, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Draw Moving Deep Space Nebula
-            const grad = ctx.createRadialGradient(
-                width/2 + (mouse.x * 2), height/2 + (mouse.y * 2), 0,
-                width/2, height/2, width
-            );
-            grad.addColorStop(0, '#0f172a'); // Midnight
-            grad.addColorStop(0.3, '#1e1b4b'); // Deep Indigo
-            grad.addColorStop(0.6, '#020617'); // Black hole center
-            grad.addColorStop(1, '#000000');
-            
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, width, height);
-
-            // 2. Interactive Gas Clouds (Fluid Effect)
-            ctx.globalCompositeOperation = 'screen';
-            const gasX = width/2 + Math.sin(tick) * 200 + (mouse.x * 5);
-            const gasY = height/2 + Math.cos(tick) * 150 + (mouse.y * 5);
-            
-            const gasGrad = ctx.createRadialGradient(gasX, gasY, 0, gasX, gasY, width/1.2);
-            gasGrad.addColorStop(0, 'rgba(67, 56, 202, 0.15)'); // Blue Gas
-            gasGrad.addColorStop(0.5, 'rgba(124, 58, 237, 0.1)'); // Purple Gas
-            gasGrad.addColorStop(1, 'transparent');
-            
-            ctx.fillStyle = gasGrad;
-            ctx.fillRect(0, 0, width, height);
-            ctx.globalCompositeOperation = 'source-over';
-
-            // 3. 3D Starfield with Parallax
-            stars.forEach(s => {
-                // Perspective calculation
-                const perspective = 400 / (400 + s.z);
-                const x = (s.x - width/2 + mouse.x * (s.z/100)) * perspective + width/2;
-                const y = (s.y - height/2 + mouse.y * (s.z/100)) * perspective + height/2;
-                const size = s.size * perspective;
-
-                ctx.fillStyle = s.color;
-                ctx.globalAlpha = 0.2 + (perspective); 
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI*2);
-                ctx.fill();
-
-                // Move stars toward camera
-                s.z -= 0.5; 
-                if(s.z < -400) {
-                    s.z = width;
-                    s.x = Math.random() * width;
-                    s.y = Math.random() * height;
+            particles.forEach(p => {
+                // Interactivity: Move away from mouse
+                let dx = p.x - mouse.x;
+                let dy = p.y - mouse.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if(dist < 200) {
+                    let force = (200 - dist) / 200;
+                    p.vx += (dx / dist) * force * 0.5;
+                    p.vy += (dy / dist) * force * 0.5;
                 }
+
+                // Apply velocity
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // Friction (makes it feel "fluid")
+                p.vx *= 0.98;
+                p.vy *= 0.98;
+
+                // Bounce off edges
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                // Draw Particle
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = p.color;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset for performance
             });
 
-            updateClock();
-            requestAnimationFrame(draw);
-        }
-
-        function updateClock() {
+            // Update Time
             const now = new Date();
-            timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
-            const options = { weekday: 'short', month: 'short', day: 'numeric' };
-            dateEl.innerText = now.toLocaleDateString(undefined, options).toUpperCase();
+            timeEl.innerText = now.getHours().toString().padStart(2, '0') + ":" + 
+                               now.getMinutes().toString().padStart(2, '0');
+
+            requestAnimationFrame(animate);
         }
 
         window.addEventListener('resize', init);
         init();
-        draw();
+        animate();
     </script>
 </body>
 </html>
