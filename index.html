@@ -15,18 +15,19 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #050505;
+            background-color: #000000;
+            font-family: sans-serif;
         }
 
-        /* Full screen desktop background video */
+        /* Fixed background element with specific dimensions */
         .bg-video {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            z-index: -1;
+            z-index: 1;
         }
 
         /* Floating player window in the top right corner */
@@ -38,9 +39,8 @@
             aspect-ratio: 16 / 9;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-            pointer-events: none; /* Prevents accidentally clicking it on your desktop */
-            z-index: 1;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            z-index: 10;
         }
 
         .wallpaper-container iframe {
@@ -48,22 +48,60 @@
             height: 100%;
             border: none;
         }
+
+        /* Click overlay to force browser media wake-up */
+        .click-trigger {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 100;
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body>
 
-    <video class="bg-video" autoplay loop muted playsinline>
+    <div class="click-trigger" id="trigger">
+        Click Anywhere to Initialize Video Player
+    </div>
+
+    <video class="bg-video" id="main-video" loop muted playsinline>
         <source src="crashed-spaceship-moewalls-com.mp4" type="video/mp4">
     </video>
 
     <div class="wallpaper-container">
         <iframe 
-            src="https://www.youtube-nocookie.com/embed?listType=playlist&list=PLPt_iib-cZwTPDD1FtAJ_ZUpgbBmEglwd&autoplay=1&loop=1&playlist=YOUR_PLAYLIST_ID_HERE&controls=0&modestbranding=1"
+            src="https://www.youtube-nocookie.com/embed?listType=playlist&list=PLPt_iib-cZwTPDD1FtAJ_ZUpgbBmEglwd&autoplay=1&loop=1&playlist=PLPt_iib-cZwTPDD1FtAJ_ZUpgbBmEglwd&controls=0&modestbranding=1"
             title="Ambient Playlist Wallpaper"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowfullscreen>
         </iframe>
     </div>
+
+    <script>
+        const trigger = document.getElementById('trigger');
+        const video = document.getElementById('main-video');
+
+        trigger.addEventListener('click', () => {
+            // Force the video element to compute size and play natively
+            video.play().then(() => {
+                // Smoothly clear the interaction blocker screen
+                trigger.style.opacity = '0';
+                setTimeout(() => trigger.remove(), 300);
+            }).catch(err => {
+                console.error("Playback failed: ", err);
+            });
+        });
+    </script>
 
 </body>
 </html>
