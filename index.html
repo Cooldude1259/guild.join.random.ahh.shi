@@ -11,14 +11,25 @@
             box-sizing: border-box;
         }
 
-        body {
-            background-color: #050505;
-            width: 100vw;
-            height: 100vh;
+        body, html {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            position: relative;
+            background-color: #050505;
         }
 
+        /* Full screen desktop background video */
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        /* Floating player window in the top right corner */
         .wallpaper-container {
             position: absolute;
             top: 20px;
@@ -28,6 +39,7 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            pointer-events: none; /* Prevents accidentally clicking it on your desktop */
             z-index: 1;
         }
 
@@ -35,36 +47,23 @@
             width: 100%;
             height: 100%;
             border: none;
-            object-fit: cover;
         }
     </style>
 </head>
 <body>
 
+    <video class="bg-video" autoplay loop muted playsinline>
+        <source src="crashed-spaceship-moewalls-com.mp4" type="video/mp4">
+    </video>
+
     <div class="wallpaper-container">
         <iframe 
-            id="wallpaper-player"
-            src="https://www.youtube-nocookie.com/embed?listType=playlist&list=PLPt_iib-cZwTPDD1FtAJ_ZUpgbBmEglwd&autoplay=1&mute=1&loop=1&playlist=YOUR_PLAYLIST_ID_HERE&controls=0&modestbranding=1&enablejsapi=1"
+            src="https://www.youtube-nocookie.com/embed?listType=playlist&list=PLPt_iib-cZwTPDD1FtAJ_ZUpgbBmEglwd&autoplay=1&loop=1&playlist=YOUR_PLAYLIST_ID_HERE&controls=0&modestbranding=1"
             title="Ambient Playlist Wallpaper"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowfullscreen>
         </iframe>
     </div>
-
-    <script>
-        // Wait for the window to load, then send a command through the YouTube API to unmute
-        window.addEventListener('load', () => {
-            const playerIframe = document.getElementById('wallpaper-player');
-            
-            // A tiny delay ensures the browser's autoplay block is bypassed before unmuting
-            setTimeout(() => {
-                playerIframe.contentWindow.postMessage(
-                    '{"event":"command","func":"unMute","args":""}', 
-                    '*'
-                );
-            }, 500); 
-        });
-    </script>
 
 </body>
 </html>
