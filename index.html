@@ -1,17 +1,70 @@
-<iframe width="560" height="315" 
-src="https://www.youtube-nocookie.com/embed/6pmj0jbFKGU?si=2yd-18tqaMcSAYDo" 
-title="YouTube video player" 
-frameborder="0" 
-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-referrerpolicy="strict-origin-when-cross-origin" 
-allowfullscreen></iframe>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambient Wallpaper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/6pmj0jbFKGU?si=zlayMDg1ZJkwIBqy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        body {
+            background-color: #050505;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
 
-<iframe width="560" height="315" 
-src="https://www.youtube-nocookie.com/embed/6pmj0jbFKGU?origin=http://127.0.0.1:5500" 
-title="YouTube video player" 
-frameborder="0" 
-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-referrerpolicy="strict-origin-when-cross-origin" 
-allowfullscreen></iframe>
+        .wallpaper-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 450px;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        .wallpaper-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wallpaper-container">
+        <iframe 
+            id="wallpaper-player"
+            src="https://www.youtube-nocookie.com/embed?listType=playlist&list=PLPt_iib-cZwTPDD1FtAJ_ZUpgbBmEglwd&autoplay=1&mute=1&loop=1&playlist=YOUR_PLAYLIST_ID_HERE&controls=0&modestbranding=1&enablejsapi=1"
+            title="Ambient Playlist Wallpaper"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <script>
+        // Wait for the window to load, then send a command through the YouTube API to unmute
+        window.addEventListener('load', () => {
+            const playerIframe = document.getElementById('wallpaper-player');
+            
+            // A tiny delay ensures the browser's autoplay block is bypassed before unmuting
+            setTimeout(() => {
+                playerIframe.contentWindow.postMessage(
+                    '{"event":"command","func":"unMute","args":""}', 
+                    '*'
+                );
+            }, 500); 
+        });
+    </script>
+
+</body>
+</html>
